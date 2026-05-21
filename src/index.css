@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-blue: #1e3a8a;
+  --color-brand-gray: #374151;
+  --color-brand-light-gray: #f3f4f6;
+  --color-brand-dark-blue: #172554;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-light-gray text-brand-gray antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+#root {
+  @apply min-h-screen w-full;
+}
+
