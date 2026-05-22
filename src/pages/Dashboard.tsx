@@ -160,11 +160,10 @@ const Dashboard: React.FC = () => {
         // -------------------------------------------------------------
         // MODO CRIAÇÃO: Cadastra no Auth e a Trigger do banco copia para a tabela pública
         // -------------------------------------------------------------
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: usuarioEmail.trim().toLowerCase(),
           password: usuarioPassword,
           options: {
-            // Envia os metadados que a sua Trigger do PostgreSQL precisa ler
             data: { 
               full_name: usuarioNome.trim(),
               id_perfil: Number(usuarioPerfil) 
