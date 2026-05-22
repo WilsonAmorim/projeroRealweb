@@ -128,36 +128,64 @@ const Dashboard: React.FC = () => {
 
   const handleSubmitUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!usuarioNome.trim() || !usuarioEmail.trim() || !usuarioPerfil) return;
+    
+    // Validação inicial dos campos obrigatórios
+    if (!usuarioNome.trim() || !usuarioEmail.trim() || !usuarioPerfil || (!editingUsuario && !usuarioPassword)) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
 
     setIsSavingUsuario(true);
-    const payload = {
-      nome_completo: usuarioNome.trim(),
-      email: usuarioEmail.trim().toLowerCase(),
-      id_perfil: Number(usuarioPerfil),
-      ativo: usuarioAtivo
-    };
-
     try {
       if (editingUsuario) {
+        // -------------------------------------------------------------
+        // MODO EDIÇÃO: Atualização normal na tabela public.usuarios
+        // -------------------------------------------------------------
+        const payload = {
+          nome_completo: usuarioNome.trim(),
+          email: usuarioEmail.trim().toLowerCase(),
+          id_perfil: Number(usuarioPerfil),
+          ativo: usuarioAtivo
+        };
+
         const { error } = await supabase
           .from('usuarios')
           .update(payload)
           .eq('id_usuario', editingUsuario.id_usuario);
 
         if (error) throw error;
+        alert('Usuário atualizado com sucesso!');
+
       } else {
-        const { error } = await supabase
-          .from('usuarios')
-          .insert([payload]);
+        // -------------------------------------------------------------
+        // MODO CRIAÇÃO: Cadastra no Auth e a Trigger do banco copia para a tabela pública
+        // -------------------------------------------------------------
+        const { data, error } = await supabase.auth.signUp({
+          email: usuarioEmail.trim().toLowerCase(),
+          password: usuarioPassword,
+          options: {
+            // Envia os metadados que a sua Trigger do PostgreSQL precisa ler
+            data: { 
+              full_name: usuarioNome.trim(),
+              id_perfil: Number(usuarioPerfil) 
+            }
+          }
+        });
 
         if (error) throw error;
+
+        // Caso a confirmação de e-mail ainda esteja ativa no seu painel do Supabase,
+        // o usuário precisará clicar no link antes de logar, mas o cadastro foi feito.
+        alert('Usuário criado com sucesso no sistema!');
       }
+
+      // Limpa o formulário e recarrega a lista do painel
       clearUsuarioForm();
       await fetchUsuarios();
+
     } catch (error: any) {
-      console.error('Erro ao salvar usuário:', error.message);
-      alert(error.message || 'Erro ao salvar usuário.');
+      console.error('Erro detalhado ao salvar usuário:', error);
+      alert(error.message || 'Erro inesperado ao salvar usuário.');
     } finally {
       setIsSavingUsuario(false);
     }
