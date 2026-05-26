@@ -1,11 +1,15 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import {
     ChevronLeft, Package, Plus, Trash2,
     ClipboardList, Wrench, Loader2, Save,
-    Settings, Box, Edit3, Check, X, FileText
+    Settings, Box, Edit3, Check, X, FileText,
+    ClipboardCheck
 } from 'lucide-react';
+import LaudoMecanico from '../components/os/LaudoMecanico';
+import LaudoEletricoForm from '../components/os/LaudoEletricoForm';
+import LaudoEletricoView from '../components/os/LaudoEletricoView';
 
 interface OSServico {
     id_osservicos: number;
@@ -51,7 +55,7 @@ const OSServiceTracking: React.FC = () => {
     const [rebobinamentoList, setRebobinamentoList] = useState<any[]>([]);
 
     // Tabs
-    const [activeTab, setActiveTab] = useState<'servicos' | 'pecas' | 'rebobinamento'>('servicos');
+    const [activeTab, setActiveTab] = useState<'servicos' | 'pecas' | 'rebobinamento' | 'laudo' | 'laudo_eletrico'>('servicos');
 
     // Form states
     const [idServico, setIdServico] = useState('');
@@ -67,7 +71,7 @@ const OSServiceTracking: React.FC = () => {
                 const [osRes, servicosRes, pecasRes, servRefsRes, pecaRefsRes, rebobRefsRes, rebobRes] = await Promise.all([
                     supabase
                         .from('ordens_servico')
-                        .select('*, motor:motores(num_serie, cliente(nome_razao_social))')
+                        .select('*, motor:motores(num_serie, corrente_nominal, tensao_nominal, cliente(nome_razao_social))')
                         .eq('id_os', Number(id))
                         .single(),
                     supabase.from('os_servicos').select('*, servico:servico(*)').eq('id_os', Number(id)),
@@ -89,7 +93,11 @@ const OSServiceTracking: React.FC = () => {
                 const osDataMapped = {
                     ...osRes.data,
                     cliente: { razao_social: osRes.data.motor?.cliente?.nome_razao_social },
-                    motor: { num_serie: osRes.data.motor?.num_serie }
+                    motor: { 
+                        num_serie: osRes.data.motor?.num_serie,
+                        corrente_nominal: osRes.data.motor?.corrente_nominal,
+                        tensao_nominal: osRes.data.motor?.tensao_nominal
+                    }
                 };
 
                 console.log('Serviços carregados:', servRefsRes.data);
@@ -279,201 +287,257 @@ const OSServiceTracking: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                    {/* Add Item Form */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            
-                            {/* Tabs Header */}
-                            <div className="flex border-b border-gray-200 bg-gray-50">
-                                <button
-                                    onClick={() => setActiveTab('servicos')}
-                                    className={`flex-1 py-4 text-sm font-bold flex items-center justify-center transition-colors ${
-                                        activeTab === 'servicos'
-                                            ? 'text-brand-blue border-b-2 border-brand-blue bg-white'
-                                            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-                                    }`}
-                                >
-                                    <Settings className="h-4 w-4 mr-2" />
-                                    Serviços
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('pecas')}
-                                    className={`flex-1 py-4 text-sm font-bold flex items-center justify-center transition-colors ${
-                                        activeTab === 'pecas'
-                                            ? 'text-brand-blue border-b-2 border-brand-blue bg-white'
-                                            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-                                    }`}
-                                >
-                                    <Box className="h-4 w-4 mr-2" />
-                                    Peças
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('rebobinamento')}
-                                    className={`flex-1 py-4 text-sm font-bold flex items-center justify-center transition-colors ${
-                                        activeTab === 'rebobinamento'
-                                            ? 'text-brand-blue border-b-2 border-brand-blue bg-white'
-                                            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-                                    }`}
-                                >
-                                    <Wrench className="h-4 w-4 mr-2" />
-                                    Rebobinamento
-                                </button>
-                            </div>
-
-                            <div className="p-6">
-                                <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                                    <Plus className="h-5 w-5 mr-2 text-brand-blue" />
-                                    {activeTab === 'servicos' ? 'Lançar Serviço' : activeTab === 'pecas' ? 'Lançar Peça' : 'Lançar Rebobinamento'}
-                                </h2>
-
-                                <form onSubmit={handleAddItem} className="space-y-4">
-                                    
-                                    {activeTab === 'servicos' && (
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo de Serviço</label>
-                                            <select
-                                                required
-                                                value={idServico}
-                                                onChange={(e) => setIdServico(e.target.value)}
-                                                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
-                                            >
-                                                <option value="">Selecione um serviço...</option>
-                                                {serviceTypes.map(t => (
-                                                    <option key={t.id_servico} value={t.id_servico}>{t.descricao_servico}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    )}
-
-                                    {activeTab === 'pecas' && (
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Peça (Estoque)</label>
-                                            <select
-                                                required
-                                                value={idPecas}
-                                                onChange={(e) => setIdPecas(e.target.value)}
-                                                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
-                                            >
-                                                <option value="">Selecione uma peça...</option>
-                                                {pecasList.map(p => (
-                                                    <option key={p.id_pecas} value={p.id_pecas}>{p.descricao_pecas}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    )}
-
-                                    {activeTab === 'rebobinamento' && (
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rebobinamento</label>
-                                            <select
-                                                required
-                                                value={idRebobinamento}
-                                                onChange={(e) => handleRebobinamentoChange(e.target.value)}
-                                                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
-                                            >
-                                                <option value="">Selecione um rebobinamento...</option>
-                                                {rebobinamentoList.map(r => (
-                                                    <option key={r.id_rebobinamento} value={r.id_rebobinamento}>
-                                                        {r.descricao_rebobinamento} {r.cv ? `(${r.cv} CV)` : ''} {r.polos ? `- ${r.polos} Polos` : ''} - R$ {Number(r.preco).toFixed(2)}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Valor / Preço</label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span className="text-gray-400 text-xs font-bold">R$</span>
-                                            </div>
-                                            <input
-                                                type="number"
-                                                required
-                                                step="0.01"
-                                                min="0"
-                                                value={valorUnitario}
-                                                onChange={(e) => setValorUnitario(e.target.value)}
-                                                className="w-full pl-9 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="w-full mt-4 flex items-center justify-center space-x-2 py-3 bg-brand-blue text-white rounded-lg font-bold hover:bg-brand-blue-dark transition-colors disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                                            <>
-                                                <Save className="h-5 w-5" />
-                                                <span>{activeTab === 'servicos' ? 'Lançar Serviço' : activeTab === 'pecas' ? 'Lançar Peça' : 'Lançar Rebobinamento'}</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                {/* Tabs Bar: three fluid tabs + two fixed laudo tabs side-by-side */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col sm:flex-row">
+                    <div className="flex-1 flex">
+                        <button
+                            onClick={() => setActiveTab('servicos')}
+                            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center transition-colors sm:border-r border-b sm:border-b-0 border-gray-100 ${
+                                activeTab === 'servicos'
+                                    ? 'text-brand-blue border-b-2 border-brand-blue bg-gray-50/50'
+                                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                            }`}
+                        >
+                            <Settings className="h-4 w-4 mr-2" />
+                            Serviços
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('pecas')}
+                            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center transition-colors sm:border-r border-b sm:border-b-0 border-gray-100 ${
+                                activeTab === 'pecas'
+                                    ? 'text-brand-blue border-b-2 border-brand-blue bg-gray-50/50'
+                                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                            }`}
+                        >
+                            <Box className="h-4 w-4 mr-2" />
+                            Peças
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('rebobinamento')}
+                            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center transition-colors sm:border-r border-b sm:border-b-0 border-gray-100 ${
+                                activeTab === 'rebobinamento'
+                                    ? 'text-brand-blue border-b-2 border-brand-blue bg-gray-50/50'
+                                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                            }`}
+                        >
+                            <Wrench className="h-4 w-4 mr-2" />
+                            Rebobinamento
+                        </button>
                     </div>
 
-                    {/* Summary per Tab */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
-                            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                                <h2 className="text-lg font-bold text-gray-800 flex items-center">
-                                    <ClipboardList className="h-5 w-5 mr-2 text-brand-blue" />
-                                    {activeTab === 'servicos' ? 'Resumo de Serviços' : activeTab === 'pecas' ? 'Resumo de Peças' : 'Resumo de Rebobinamentos'}
-                                </h2>
-                                <div className="flex flex-col items-end">
-                                    <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-widest">
-                                        {activeTab === 'servicos' ? osServicos.length : activeTab === 'pecas' ? osPecas.length : osRebobinamentos.length} ITENS
-                                    </span>
-                                    <span className="text-xs font-bold text-brand-blue mt-1">
-                                        Total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                                            activeTab === 'servicos' ? totalServicos : activeTab === 'pecas' ? totalPecas : totalRebobinamento
-                                        )}
-                                    </span>
+                    <div className="flex">
+                        <button
+                            onClick={() => setActiveTab('laudo')}
+                            className={`px-6 py-4 text-sm font-bold flex items-center justify-center transition-colors border-l border-gray-100 ${
+                                activeTab === 'laudo'
+                                    ? 'text-brand-blue border-b-2 border-brand-blue bg-gray-50/50'
+                                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                            }`}
+                        >
+                            <ClipboardCheck className="h-4 w-4 mr-2" />
+                            Laudo Mecânico
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('laudo_eletrico')}
+                            className={`px-6 py-4 text-sm font-bold flex items-center justify-center transition-colors border-l border-gray-100 ${
+                                activeTab === 'laudo_eletrico'
+                                    ? 'text-brand-blue border-b-2 border-brand-blue bg-gray-50/50'
+                                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                            }`}
+                        >
+                            <ClipboardList className="h-4 w-4 mr-2" />
+                            Laudo Elétrico
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {activeTab === 'laudo' ? (
+                        <div className="lg:col-span-3 animate-fade-in">
+                            <LaudoMecanico id_os={Number(id)} />
+                        </div>
+                    ) : activeTab === 'laudo_eletrico' ? (
+                        <div className="lg:col-span-3 animate-fade-in">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-1">
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                        <LaudoEletricoForm 
+                                            idOs={Number(id)} 
+                                            idMotor={osData?.id_motor}
+                                            initialTensao={osData?.motor?.tensao_nominal ? Number(osData.motor.tensao_nominal) : ''}
+                                            initialCorrente={osData?.motor?.corrente_nominal ? Number(osData.motor.corrente_nominal) : ''}
+                                            onSaved={() => {
+                                                window.location.reload();
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="lg:col-span-2">
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                        <LaudoEletricoView idOs={Number(id)} correnteNominal={Number(osData?.motor?.corrente_nominal) || null} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Add Item Form */}
+                            <div className="lg:col-span-1">
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                    <div className="p-6">
+                                        <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                                            <Plus className="h-5 w-5 mr-2 text-brand-blue" />
+                                            {activeTab === 'servicos' ? 'Lançar Serviço' : activeTab === 'pecas' ? 'Lançar Peça' : 'Lançar Rebobinamento'}
+                                        </h2>
+
+                                        <form onSubmit={handleAddItem} className="space-y-4">
+                                            
+                                            {activeTab === 'servicos' && (
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo de Serviço</label>
+                                                    <select
+                                                        required
+                                                        value={idServico}
+                                                        onChange={(e) => setIdServico(e.target.value)}
+                                                        className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
+                                                    >
+                                                        <option value="">Selecione um serviço...</option>
+                                                        {serviceTypes.map(t => (
+                                                            <option key={t.id_servico} value={t.id_servico}>{t.descricao_servico}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+
+                                            {activeTab === 'pecas' && (
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Peça (Estoque)</label>
+                                                    <select
+                                                        required
+                                                        value={idPecas}
+                                                        onChange={(e) => setIdPecas(e.target.value)}
+                                                        className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
+                                                    >
+                                                        <option value="">Selecione uma peça...</option>
+                                                        {pecasList.map(p => (
+                                                            <option key={p.id_pecas} value={p.id_pecas}>{p.descricao_pecas}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+
+                                            {activeTab === 'rebobinamento' && (
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rebobinamento</label>
+                                                    <select
+                                                        required
+                                                        value={idRebobinamento}
+                                                        onChange={(e) => handleRebobinamentoChange(e.target.value)}
+                                                        className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
+                                                    >
+                                                        <option value="">Selecione um rebobinamento...</option>
+                                                        {rebobinamentoList.map(r => (
+                                                            <option key={r.id_rebobinamento} value={r.id_rebobinamento}>
+                                                                {r.descricao_rebobinamento} {r.cv ? `(${r.cv} CV)` : ''} {r.polos ? `- ${r.polos} Polos` : ''} - R$ {Number(r.preco).toFixed(2)}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Valor / Preço</label>
+                                                <div className="relative">
+                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                        <span className="text-gray-400 text-xs font-bold">R$</span>
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        required
+                                                        step="0.01"
+                                                        min="0"
+                                                        value={valorUnitario}
+                                                        onChange={(e) => setValorUnitario(e.target.value)}
+                                                        className="w-full pl-9 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="submit"
+                                                disabled={isSubmitting}
+                                                className="w-full mt-4 flex items-center justify-center space-x-2 py-3 bg-brand-blue text-white rounded-lg font-bold hover:bg-brand-blue-dark transition-colors disabled:opacity-50"
+                                            >
+                                                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                                                    <>
+                                                        <Save className="h-5 w-5" />
+                                                        <span>{activeTab === 'servicos' ? 'Lançar Serviço' : activeTab === 'pecas' ? 'Lançar Peça' : 'Lançar Rebobinamento'}</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
 
-                            {activeTab === 'servicos' ? (
-                                osServicos.length === 0 ? (
-                                    <EmptyState message="Nenhum serviço lançado." />
-                                ) : (
-                                    <ItemsTable 
-                                        items={osServicos} 
-                                        type="servico" 
-                                        onRemove={(id) => handleRemoveItem(id, 'servico')} 
-                                        onUpdatePrice={(id, price) => handleUpdatePrice(id, price, 'servico')}
-                                    />
-                                )
-                            ) : activeTab === 'pecas' ? (
-                                osPecas.length === 0 ? (
-                                    <EmptyState message="Nenhuma peça lançada." />
-                                ) : (
-                                    <ItemsTable 
-                                        items={osPecas} 
-                                        type="peca" 
-                                        onRemove={(id) => handleRemoveItem(id, 'peca')} 
-                                        onUpdatePrice={(id, price) => handleUpdatePrice(id, price, 'peca')}
-                                    />
-                                )
-                            ) : (
-                                osRebobinamentos.length === 0 ? (
-                                    <EmptyState message="Nenhum rebobinamento lançado." />
-                                ) : (
-                                    <ItemsTable 
-                                        items={osRebobinamentos} 
-                                        type="rebobinamento" 
-                                        onRemove={(id) => handleRemoveItem(id, 'rebobinamento')} 
-                                        onUpdatePrice={(id, price) => handleUpdatePrice(id, price, 'rebobinamento')}
-                                    />
-                                )
-                            )}
-                        </div>
-                    </div>
+                            {/* Summary per Tab */}
+                            <div className="lg:col-span-2">
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
+                                    <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                                        <h2 className="text-lg font-bold text-gray-800 flex items-center">
+                                            <ClipboardList className="h-5 w-5 mr-2 text-brand-blue" />
+                                            {activeTab === 'servicos' ? 'Resumo de Serviços' : activeTab === 'pecas' ? 'Resumo de Peças' : 'Resumo de Rebobinamentos'}
+                                        </h2>
+                                        <div className="flex flex-col items-end">
+                                            <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-widest">
+                                                {activeTab === 'servicos' ? osServicos.length : activeTab === 'pecas' ? osPecas.length : osRebobinamentos.length} ITENS
+                                            </span>
+                                            <span className="text-xs font-bold text-brand-blue mt-1">
+                                                Total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                                    activeTab === 'servicos' ? totalServicos : activeTab === 'pecas' ? totalPecas : totalRebobinamento
+                                                )}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {activeTab === 'servicos' ? (
+                                        osServicos.length === 0 ? (
+                                            <EmptyState message="Nenhum serviço lançado." />
+                                        ) : (
+                                            <ItemsTable 
+                                                items={osServicos} 
+                                                type="servico" 
+                                                onRemove={(id) => handleRemoveItem(id, 'servico')} 
+                                                onUpdatePrice={(id, price) => handleUpdatePrice(id, price, 'servico')}
+                                            />
+                                        )
+                                    ) : activeTab === 'pecas' ? (
+                                        osPecas.length === 0 ? (
+                                            <EmptyState message="Nenhuma peça lançada." />
+                                        ) : (
+                                            <ItemsTable 
+                                                items={osPecas} 
+                                                type="peca" 
+                                                onRemove={(id) => handleRemoveItem(id, 'peca')} 
+                                                onUpdatePrice={(id, price) => handleUpdatePrice(id, price, 'peca')}
+                                            />
+                                        )
+                                    ) : (
+                                        osRebobinamentos.length === 0 ? (
+                                            <EmptyState message="Nenhum rebobinamento lançado." />
+                                        ) : (
+                                            <ItemsTable 
+                                                items={osRebobinamentos} 
+                                                type="rebobinamento" 
+                                                onRemove={(id) => handleRemoveItem(id, 'rebobinamento')} 
+                                                onUpdatePrice={(id, price) => handleUpdatePrice(id, price, 'rebobinamento')}
+                                            />
+                                        )
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
