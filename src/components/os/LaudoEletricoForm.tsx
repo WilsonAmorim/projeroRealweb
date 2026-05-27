@@ -26,7 +26,12 @@ export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initia
       try {
         const row = await getLaudoByOS(idOs);
         if (!mounted) return;
-        if (row) setValues(row);
+        if (row) {
+          setValues(row);
+        } else {
+          // Se não existir laudo, garante que o estado resete mantendo o id_os correto
+          setValues({ id_os: idOs });
+        }
       } catch (err) {
         console.error(err);
       }
@@ -47,12 +52,18 @@ export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initia
     e.preventDefault();
     setLoading(true);
     try {
+      // 1. Envia os dados para o banco
       const row = await upsertLaudo({ ...values, id_os: idOs });
       
+      // 2. Atualiza o estado local IMEDIATAMENTE com os dados retornados do banco
+      if (row) {
+        setValues(row);
+      }
+
       if (idMotor) {
         await supabase.from('motores').update({
           tensao_nominal: tensaoNominal === '' ? null : tensaoNominal.toString(),
-          corrente_nominal: correnteNominal === '' ? null : correnteNominal.toString()
+          corrente_nominal: correnteNominal === '' ? null : correnteNominal.toString() // Corrigido aqui!
         }).eq('id_motor', idMotor);
       }
 
