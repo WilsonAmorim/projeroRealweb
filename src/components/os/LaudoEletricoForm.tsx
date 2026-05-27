@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getLaudoByOS, upsertLaudo } from '../../services/laudoEletrico';
 import type { LaudoEletricoRow } from '../../services/laudoEletrico';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../config/supabase';
 
 type Props = {
   idOs: number;
