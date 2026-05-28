@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'; //BrowserRouter
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'; // Trocado para BrowserRouter
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
@@ -15,7 +15,7 @@ import OSOrcamento from './pages/OSOrcamento';
 function App() {
   return (
     <AuthProvider>
-      <HashRouter>
+      <BrowserRouter> {/* Trocado aqui */}
         <Routes>
           <Route path="/login" element={<Login />} />
 
@@ -94,7 +94,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </HashRouter>
+      </BrowserRouter> {/* Trocado aqui */}
     </AuthProvider>
   );
 }
