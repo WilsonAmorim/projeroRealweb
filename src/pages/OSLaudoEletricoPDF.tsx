@@ -12,8 +12,7 @@ const OSLaudoEletricoPDF: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [osData, setOsData] = useState<any>(null);
     const [laudoData, setLaudoData] = useState<any>(null);
-    const [osServicos, setOsServicos] = useState<any[]>([]);
-    const [osPecas, setOsPecas] = useState<any[]>([]);
+    
 
     useEffect(() => {
         const fetchData = async () => {
@@ -57,18 +56,8 @@ const OSLaudoEletricoPDF: React.FC = () => {
 
                 if (laudoRequest.error) throw laudoRequest.error;
 
-                const [servicosReq, pecasReq] = await Promise.all([
-                    supabase.from('os_servicos').select('*, servico:servico(*)').eq('id_os', Number(id)),
-                    supabase.from('os_pecas').select('*, peca:pecas(*)').eq('id_os', Number(id)),
-                ]);
-
-                if (servicosReq.error) throw servicosReq.error;
-                if (pecasReq.error) throw pecasReq.error;
-
                 setOsData(osMapeada);
                 setLaudoData(laudoRequest.data);
-                setOsServicos(servicosReq.data || []);
-                setOsPecas(pecasReq.data || []);
 
             } catch (error: any) {
                 console.error('Erro ao buscar dados do laudo elétrico:', error.message || error);
