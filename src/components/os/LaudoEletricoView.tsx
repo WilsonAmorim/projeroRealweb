@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getLaudoByOS } from '../../services/laudoEletrico';
 import type { LaudoEletricoRow } from '../../services/laudoEletrico';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
@@ -7,6 +8,7 @@ type Props = { idOs: number; correnteNominal?: number | null; };
 
 export default function LaudoEletricoView({ idOs, correnteNominal }: Props) {
   const [data, setData] = useState<LaudoEletricoRow | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -47,7 +49,7 @@ export default function LaudoEletricoView({ idOs, correnteNominal }: Props) {
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={() => window.open(`/os/${idOs}/laudo-eletrico`, '_blank')}
+          onClick={() => navigate(`/os/${idOs}/laudo-eletrico`)}
           className="px-3 py-2 bg-brand-blue text-white rounded text-xs font-bold"
         >
           Gerar PDF
