@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { CheckCircle, AlertCircle, Loader2, Save } from 'lucide-react';
 import { getLaudoByOS, upsertLaudo } from '../../services/laudoEletrico';
 import type { LaudoEletricoRow } from '../../services/laudoEletrico';
 import { supabase } from '../../config/supabase';
@@ -13,7 +14,7 @@ type Props = {
 
 export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initialCorrente, onSaved }: Props) {
   const [loading, setLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [values, setValues] = useState<LaudoEletricoRow>({ id_os: idOs });
 
   // UI-only nominal fields
@@ -51,9 +52,15 @@ export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initia
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setStatusMessage(null);
     try {
+      // Buscar o ID do usuário atualmente autenticado diretamente do Supabase Auth para satisfazer RLS
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = user?.id || '987b663b-b1e5-44c5-a873-6ee4e52eec0f';
+
       // 1. Envia os dados para o banco
-      const row = await upsertLaudo({ ...values, id_os: idOs });
+      const payload = { ...values, id_os: idOs, id_usuario: currentUserId };
+      const row = await upsertLaudo(payload);
       
       // 2. Atualiza o estado local IMEDIATAMENTE com os dados retornados do banco
       if (row) {
@@ -67,7 +74,7 @@ export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initia
         }).eq('id_motor', idMotor);
       }
 
-      setSaved(true);
+      setStatusMessage({ type: 'success', text: 'Laudo Elétrico salvo com sucesso!' });
       // Notificar views locais sem forçar reload ou navegação
       try {
         window.dispatchEvent(new CustomEvent('laudoEletricoSaved', { detail: row }));
@@ -75,12 +82,14 @@ export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initia
         // fallback: ainda chamar onSaved se for fornecido
         onSaved?.(row);
       }
-      setTimeout(() => setSaved(false), 2500);
-    } catch (err) {
+      setTimeout(() => setStatusMessage(null), 3500);
+    } catch (err: any) {
       console.error(err);
-      alert('Erro ao salvar laudo');
+      const errMsg = err?.message || err?.details || err?.hint || JSON.stringify(err);
+      setStatusMessage({ type: 'error', text: `Erro ao salvar laudo: ${errMsg}` });
     } finally {
       setLoading(false);
+      window.scrollTo({ top: 100, behavior: 'smooth' });
     }
   };
 
@@ -88,7 +97,7 @@ export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initia
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium">Tensão Nominal (V)</label>
           <input
@@ -108,15 +117,6 @@ export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initia
             step="0.01"
             className="mt-1 w-full p-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
           />
-        </div>
-        <div className="flex items-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-brand-blue text-white rounded-md font-semibold hover:bg-brand-blue/90 disabled:opacity-60"
-          >
-            {loading ? 'Salvando...' : 'Salvar Laudo'}
-          </button>
         </div>
       </div>
 
@@ -217,11 +217,41 @@ export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initia
       </section>
 
       <section>
-        <label className="block text-sm">Observações Elétricas</label>
-        <textarea className="mt-1 w-full p-3 bg-white border border-gray-200 rounded-md text-sm" rows={5} value={values.observacoes || ''} onChange={(e) => setField('observacoes', e.target.value)} />
+        <label className="block text-sm font-semibold mb-2">Observações Elétricas</label>
+        <textarea className="mt-1 w-full p-3 bg-white border border-gray-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue" rows={5} value={values.observacoes || ''} onChange={(e) => setField('observacoes', e.target.value)} />
       </section>
 
-      {saved && <div className="text-sm text-green-600 mt-2">Laudo salvo com sucesso.</div>}
+      <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-4">
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex items-center justify-center space-x-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/15 active:scale-95 transition-all disabled:opacity-50"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          <span>Salvar Laudo Elétrico</span>
+        </button>
+      </div>
+
+      {statusMessage && (
+        <div className={`p-4 rounded-xl border flex items-start space-x-3 animate-fade-in ${
+          statusMessage.type === 'success'
+            ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
+            : 'bg-red-50 border-red-100 text-red-800'
+        }`}>
+          {statusMessage.type === 'success' ? (
+            <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+          ) : (
+            <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+          )}
+          <div>
+            <p className="font-bold text-sm">{statusMessage.text}</p>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

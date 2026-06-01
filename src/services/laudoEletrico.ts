@@ -19,6 +19,7 @@ export type LaudoEletricoRow = {
   isolacao_saida_s?: number | null;
   isolacao_saida_t?: number | null;
   observacoes?: string | null;
+  id_usuario?: string | null;
 };
 
 export async function getLaudoByOS(id_os: number) {
