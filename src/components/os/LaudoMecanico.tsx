@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   Save, Loader2, ClipboardList, Layers, Settings, 
-  FileText, CheckCircle, AlertCircle 
+  FileText, CheckCircle, AlertCircle, Printer 
 } from 'lucide-react';
 
 import tampaImg from '../../assets/tampa.png';
@@ -61,6 +62,7 @@ const initialFormData: LaudoFormData = {
 
 const LaudoMecanico: React.FC<LaudoMecanicoProps> = ({ id_os }) => {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [activeSubTab, setActiveSubTab] = useState<'tampas' | 'eixo' | 'acoplamento' | 'observacoes'>('tampas');
   const [formData, setFormData] = useState<LaudoFormData>(initialFormData);
   const [laudoId, setLaudoId] = useState<number | null>(null);
@@ -718,6 +720,15 @@ const LaudoMecanico: React.FC<LaudoMecanicoProps> = ({ id_os }) => {
               <Save className="h-4 w-4" />
             )}
             <span>Salvar Laudo Mecânico</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate(`/os/${id_os}/laudo-mecanico`)}
+            className="flex items-center justify-center space-x-2 px-6 py-3 bg-brand-blue hover:bg-brand-blue-dark text-white rounded-xl font-bold text-xs shadow-md shadow-brand-blue/15 active:scale-95 transition-all"
+          >
+            <Printer className="h-4 w-4" />
+            <span>Gerar PDF</span>
           </button>
         </div>
 

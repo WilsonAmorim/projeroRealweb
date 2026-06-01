@@ -44,6 +44,15 @@ export default function LaudoEletricoView({ idOs, correnteNominal }: Props) {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => window.open(`/os/${idOs}/laudo-eletrico`, '_blank')}
+          className="px-3 py-2 bg-brand-blue text-white rounded text-xs font-bold"
+        >
+          Gerar PDF
+        </button>
+      </div>
       <div className="bg-white p-4 rounded shadow">
         <h4 className="font-semibold mb-3">Corrente de Saída (A)</h4>
         <div className="w-full h-64">

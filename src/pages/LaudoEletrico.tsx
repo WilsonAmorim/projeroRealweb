@@ -16,6 +16,7 @@ export default function LaudoEletricoPage() {
         <div className="ml-auto">
           <button className={`px-4 py-2 ${tab==='cadastro'?'btn-primary':''}`} onClick={()=>setTab('cadastro')}>Cadastro</button>
           <button className={`px-4 py-2 ml-2 ${tab==='visualizacao'?'btn-primary':''}`} onClick={()=>setTab('visualizacao')}>Visualização</button>
+          <button className="px-4 py-2 ml-4 bg-brand-blue text-white rounded" onClick={()=> window.open(`/os/${idOs}/laudo-eletrico`, '_blank')}>Gerar PDF</button>
         </div>
       </div>
 

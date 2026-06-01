@@ -11,6 +11,8 @@ import CreateOSForm from './pages/CreateOSForm';
 import UpdateOSForm from './pages/UpdateOSForm';
 import OSServiceTracking from './pages/OSServiceTracking';
 import OSOrcamento from './pages/OSOrcamento';
+import OSLaudoMecanicoPDF from './pages/OSLaudoMecanicoPDF';
+import OSLaudoEletricoPDF from './pages/OSLaudoEletricoPDF';
 
 function App() {
   return (
@@ -87,6 +89,24 @@ function App() {
             element={
               <ProtectedRoute>
                 <OSOrcamento />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/os/:id/laudo-mecanico"
+            element={
+              <ProtectedRoute>
+                <OSLaudoMecanicoPDF />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/os/:id/laudo-eletrico"
+            element={
+              <ProtectedRoute>
+                <OSLaudoEletricoPDF />
               </ProtectedRoute>
             }
           />
