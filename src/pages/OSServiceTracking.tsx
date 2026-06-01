@@ -63,8 +63,7 @@ const OSServiceTracking: React.FC = () => {
     const [idRebobinamento, setIdRebobinamento] = useState('');
     const [valorUnitario, setValorUnitario] = useState('0');
 
-    useEffect(() => {
-        const fetchData = async () => {
+    const fetchData = async () => {
             console.log('ID recebido:', id);
             console.log('ID convertido:', Number(id));
             try {
@@ -123,7 +122,9 @@ const OSServiceTracking: React.FC = () => {
             } finally {
                 setLoading(false);
             }
-        };
+    };
+
+    useEffect(() => {
         fetchData();
     }, [id]);
 
@@ -366,9 +367,7 @@ const OSServiceTracking: React.FC = () => {
                                             idMotor={osData?.id_motor}
                                             initialTensao={osData?.motor?.tensao_nominal ? Number(osData.motor.tensao_nominal) : ''}
                                             initialCorrente={osData?.motor?.corrente_nominal ? Number(osData.motor.corrente_nominal) : ''}
-                                            onSaved={() => {
-                                                window.location.reload();
-                                            }}
+                                            onSaved={() => fetchData()}
                                         />
                                     </div>
                                 </div>
