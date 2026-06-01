@@ -17,6 +17,15 @@ export default function LaudoEletricoView({ idOs, correnteNominal }: Props) {
       if (!mounted) return;
       setData(row);
     })();
+    const handler = (e: any) => {
+      try {
+        const detail = e?.detail;
+        if (detail && detail.id_os === idOs) setData(detail);
+      } catch (err) {
+        // ignore
+      }
+    };
+    window.addEventListener('laudoEletricoSaved', handler as EventListener);
     return () => { mounted = false; };
   }, [idOs]);
 

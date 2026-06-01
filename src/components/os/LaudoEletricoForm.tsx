@@ -68,7 +68,13 @@ export default function LaudoEletricoForm({ idOs, idMotor, initialTensao, initia
       }
 
       setSaved(true);
-      onSaved?.(row);
+      // Notificar views locais sem forçar reload ou navegação
+      try {
+        window.dispatchEvent(new CustomEvent('laudoEletricoSaved', { detail: row }));
+      } catch (e) {
+        // fallback: ainda chamar onSaved se for fornecido
+        onSaved?.(row);
+      }
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       console.error(err);

@@ -367,7 +367,6 @@ const OSServiceTracking: React.FC = () => {
                                             idMotor={osData?.id_motor}
                                             initialTensao={osData?.motor?.tensao_nominal ? Number(osData.motor.tensao_nominal) : ''}
                                             initialCorrente={osData?.motor?.corrente_nominal ? Number(osData.motor.corrente_nominal) : ''}
-                                            onSaved={() => fetchData()}
                                         />
                                     </div>
                                 </div>
