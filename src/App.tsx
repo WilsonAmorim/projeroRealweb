@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'; // Trocado para HashRouter
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -17,7 +18,8 @@ import OSLaudoEletricoPDF from './pages/OSLaudoEletricoPDF';
 function App() {
   return (
     <AuthProvider>
-      <HashRouter> {/* Trocado aqui */}
+      <ToastProvider>
+        <HashRouter> {/* Trocado aqui */}
         <Routes>
           <Route path="/login" element={<Login />} />
 
@@ -115,6 +117,7 @@ function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </HashRouter> {/* Trocado aqui */}
+      </ToastProvider>
     </AuthProvider>
   );
 }

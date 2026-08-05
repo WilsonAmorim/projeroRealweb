@@ -1,6 +1,6 @@
 Prompt Mestre: Desenvolvimento Frontend RealServiços
 Contexto:
-Estou desenvolvendo o frontend (Web ou Mobile) para o sistema de gestão de oficina de motores elétricos RealServiços. O backend (Projeto_1), foi desenvolvido em Node.js seguindo a Arquitetura Hexagonal e utiliza Supabase como banco de dados. A base de dados já está populada com os dados migrados e corrigidos (UTF-8).
+Estou desenvolvendo o frontend (Web ou Mobile) para o sistema de gestão de oficina de motores elétricos RealServiços.  Utiliza Supabase como banco de dados e backend.
 
 Diretrizes de Desenvolvimento:
 
