@@ -105,11 +105,28 @@ const Clients: React.FC = () => {
   };
 
   const handleDeleteClient = async (id: number) => {
-    if (!window.confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')) {
-      return;
-    }
-
     try {
+      // 1. Verificar se o cliente possui motores cadastrados
+      const { data: motors, error: checkError } = await supabase
+        .from('motores')
+        .select('id_motor')
+        .eq('id_cliente', id)
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      if (motors && motors.length > 0) {
+        showToast(
+          'Não é possível excluir este cliente pois ele possui motor(es) cadastrado(s).',
+          'error'
+        );
+        return;
+      }
+
+      if (!window.confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')) {
+        return;
+      }
+
       const { error } = await supabase.from('cliente').delete().eq('id_cliente', id);
 
       if (error) throw error;
@@ -118,7 +135,11 @@ const Clients: React.FC = () => {
       await fetchClients(debouncedSearch);
     } catch (error: any) {
       console.error('Erro ao excluir cliente:', error);
-      showToast(error.message || 'Erro ao excluir cliente no servidor.', 'error');
+      let msg = error.message || 'Erro ao excluir cliente no servidor.';
+      if (error.code === '23503' || error.message?.includes('foreign key')) {
+        msg = 'Não é possível excluir este cliente pois ele possui vínculos no sistema (motores ou ordens de serviço).';
+      }
+      showToast(msg, 'error');
     }
   };
 
