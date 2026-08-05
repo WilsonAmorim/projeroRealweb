@@ -141,6 +141,74 @@ const Faturamento: React.FC = () => {
     getFaturas();
   }, [activeTab, showToast]);
 
+  const calcularTotaisOS = async (idsOS: number[]) => {
+    if (!idsOS || idsOS.length === 0) return [];
+
+    try {
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'get_totais_os_faturamento',
+        { ids_texto: idsOS.join(',') }
+      );
+      if (!rpcError && rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
+        return rpcData;
+      }
+    } catch {
+      // Ignora erro RPC e avança para o fallback
+    }
+
+    try {
+      const [servicosReq, pecasReq, rebobinamentosReq] = await Promise.all([
+        supabase.from('os_servicos').select('id_os, preco, valor, servico:servico(preco)').in('id_os', idsOS),
+        supabase.from('os_pecas').select('id_os, preco, valor, valor_unitario, peca:pecas(preco)').in('id_os', idsOS),
+        supabase.from('os_rebobinamentos').select('id_os, preco, valor, rebobinamento:rebobinamentos(preco)').in('id_os', idsOS),
+      ]);
+
+      const servicos = servicosReq.data || [];
+      const pecas = pecasReq.data || [];
+      const rebobinamentos = rebobinamentosReq.data || [];
+
+      const getItemPrice = (item: any) => {
+        const raw =
+          item?.preco ??
+          item?.valor_unitario ??
+          item?.valor ??
+          item?.servico?.preco ??
+          item?.peca?.preco ??
+          item?.rebobinamento?.preco ??
+          0;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : 0;
+      };
+
+      const mapTotais: Record<number, { id_os: number; total_servicos: number; total_pecas: number; total: number }> = {};
+
+      idsOS.forEach((id) => {
+        mapTotais[id] = { id_os: id, total_servicos: 0, total_pecas: 0, total: 0 };
+      });
+
+      servicos.forEach((s: any) => {
+        if (mapTotais[s.id_os]) mapTotais[s.id_os].total_servicos += getItemPrice(s);
+      });
+
+      rebobinamentos.forEach((r: any) => {
+        if (mapTotais[r.id_os]) mapTotais[r.id_os].total_servicos += getItemPrice(r);
+      });
+
+      pecas.forEach((p: any) => {
+        if (mapTotais[p.id_os]) mapTotais[p.id_os].total_pecas += getItemPrice(p);
+      });
+
+      Object.values(mapTotais).forEach((item) => {
+        item.total = item.total_servicos + item.total_pecas;
+      });
+
+      return Object.values(mapTotais);
+    } catch (err) {
+      console.error('Erro ao calcular totais das OS via consulta direta:', err);
+      return idsOS.map((id) => ({ id_os: id, total_servicos: 0, total_pecas: 0, total: 0 }));
+    }
+  };
+
   useEffect(() => {
     const getTotais = async () => {
       if (selectedOS.length === 0) {
@@ -149,11 +217,7 @@ const Faturamento: React.FC = () => {
         return;
       }
       try {
-        const { data, error } = await supabase.rpc('get_totais_os_faturamento', {
-          ids_texto: selectedOS.join(','),
-        });
-        if (error) throw error;
-
+        const data = await calcularTotaisOS(selectedOS);
         const totalAcumulado = (data || []).reduce(
           (sum: number, item: any) => sum + Number(item.total),
           0
@@ -285,12 +349,7 @@ const Faturamento: React.FC = () => {
       let detalhesCalculados: any[] = [];
 
       if (idsOS.length > 0) {
-        const { data: rpcData, error: rpcError } = await supabase.rpc(
-          'get_totais_os_faturamento',
-          { ids_texto: idsOS.join(',') }
-        );
-        if (rpcError) throw rpcError;
-        detalhesCalculados = rpcData || [];
+        detalhesCalculados = await calcularTotaisOS(idsOS);
       }
 
       const formatado: Relatorio[] = (data || []).map((f: any) => {
