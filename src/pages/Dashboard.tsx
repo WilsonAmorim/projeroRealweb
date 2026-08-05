@@ -429,7 +429,7 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => navigate('/clientes')}
+              onClick={() => navigate('/os/abrir')}
               className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center space-x-2 shrink-0"
             >
               <Plus className="h-4 w-4" />

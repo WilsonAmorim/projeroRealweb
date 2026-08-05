@@ -7,7 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Faturamento from './pages/Faturamento';
 import Clients from './pages/Clients';
 import Motors from './pages/Motors';
-// import OpenOS from './pages/OpenOS';
+import OpenOS from './pages/OpenOS';
 import CreateOSForm from './pages/CreateOSForm';
 import UpdateOSForm from './pages/UpdateOSForm';
 import OSServiceTracking from './pages/OSServiceTracking';
@@ -55,6 +55,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <Clients />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/os/abrir"
+            element={
+              <ProtectedRoute>
+                <OpenOS />
               </ProtectedRoute>
             }
           />
