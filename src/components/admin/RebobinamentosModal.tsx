@@ -185,7 +185,7 @@ export const RebobinamentosModal: React.FC<RebobinamentosModalProps> = ({
                 ) : (
                   rebobinamentosList.map((item) => (
                     <tr key={item.id_rebobinamento} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 font-semibold">{item.descricao}</td>
+                      <td className="p-3 font-semibold">{item.descricao_rebobinamento || item.descricao || '-'}</td>
                       <td className="p-3 text-center">{item.cv} CV</td>
                       <td className="p-3 text-center">{item.polos}P</td>
                       <td className="p-3 text-right font-bold text-emerald-600">
