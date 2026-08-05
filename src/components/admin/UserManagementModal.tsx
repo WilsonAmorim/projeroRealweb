@@ -210,11 +210,11 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 ) : (
                   usuariosList.map((usr) => (
                     <tr key={usr.id_usuario} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 font-semibold">{usr.nome}</td>
+                      <td className="p-3 font-semibold">{usr.nome_completo || usr.nome || '-'}</td>
                       <td className="p-3 text-slate-600">{usr.email}</td>
                       <td className="p-3 text-center">
                         <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 border border-slate-200 text-slate-700">
-                          {usr.perfil?.nome_perfil || 'N/A'}
+                          {usr.perfil?.nome_perfil || usr.perfis_acesso?.nome_perfil || 'N/A'}
                         </span>
                       </td>
                       <td className="p-3 text-center">
