@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, User, Users, DollarSign, Settings, Wrench, Loader2, RotateCw, Edit, Trash2, X, Eye, Calendar, Save } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import DashboardCard from '../components/os/DashboardCard';
 import logo from '../assets/logo_real.jpg';
@@ -444,111 +444,260 @@ const Dashboard: React.FC = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8 w-full">
-        {/* Grade de Módulos Principais */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link to="/clientes" className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group">
-            <div className="p-3 bg-blue-50 rounded-lg w-fit mb-4 group-hover:bg-blue-600 transition-colors">
-              <Users className="h-6 w-6 text-blue-600 group-hover:text-white" />
-            </div>
-            <h3 className="font-bold text-gray-900">Clientes</h3>
-            <p className="text-xs text-gray-500 mt-1">Gestão de cadastros e vínculos de motores</p>
-          </Link>
+      <main className="flex-1">
+        <div className="xl:flex xl:min-h-[calc(100vh-4rem)]">
+          <aside className="hidden xl:flex fixed top-16 left-0 h-[calc(100vh-4rem)] w-[300px] flex-col justify-between overflow-hidden bg-slate-950 text-slate-100 shadow-2xl shadow-slate-950/20">
+            <div className="flex-1 overflow-y-auto px-4 py-5">
+              <div className="mb-8">
+                <div className="flex items-center gap-3 rounded-3xl bg-slate-900/80 px-4 py-4 shadow-inner shadow-slate-950/40 border border-slate-800">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800 text-white ring-1 ring-slate-700">
+                    <img src={logo} alt="RealServiços" className="h-10 w-10 rounded-lg object-cover" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-[0.25em] text-slate-200">Real Serviços</p>
+                    <p className="text-[11px] text-emerald-400 uppercase tracking-[0.15em]">Enterprise SaaS</p>
+                  </div>
+                </div>
+              </div>
 
-          <Link to="/motores" className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group">
-            <div className="p-3 bg-orange-50 rounded-lg w-fit mb-4 group-hover:bg-orange-600 transition-colors">
-              <Settings className="h-6 w-6 text-orange-600 group-hover:text-white" />
-            </div>
-            <h3 className="font-bold text-gray-900">Motores</h3>
-            <p className="text-xs text-gray-500 mt-1">Fichas técnicas e histórico de manutenção</p>
-          </Link>
+              <nav className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="flex w-full items-center gap-3 rounded-3xl bg-blue-600 px-4 py-3 text-slate-100 shadow shadow-blue-500/20 transition hover:bg-blue-500"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-blue-500/20 text-blue-200">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-semibold">Dashboard</span>
+                </button>
 
-          {/* Restrição de Acesso Admin baseada no id_perfil */}
-          {Number(profile?.id_perfil) === 1 && (
-            <>
+                <button
+                  type="button"
+                  onClick={() => navigate('/financeiro')}
+                  className="flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-900/90 text-slate-400">
+                    <DollarSign className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-medium">Financeiro</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/comercial')}
+                  className="flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-900/90 text-slate-400">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-medium">Comercial</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/estoque')}
+                  className="flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-900/90 text-slate-400">
+                    <Settings className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-medium">Estoque</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/crm')}
+                  className="flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-900/90 text-slate-400">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-medium">CRM</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/recursos-humanos')}
+                  className="flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-900/90 text-slate-400">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-medium">Recursos Humanos</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/controladoria')}
+                  className="flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-900/90 text-slate-400">
+                    <Settings className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-medium">Controladoria</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/relatorios')}
+                  className="flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-900/90 text-slate-400">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-medium">Relatórios</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/administracao')}
+                  className="flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-900/90 text-slate-400">
+                    <Settings className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-medium">Administração</span>
+                </button>
+              </nav>
+            </div>
+
+            <div className="border-t border-slate-800 bg-slate-950/90 px-4 py-5">
+              <div className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900/80 px-4 py-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800 text-slate-100">
+                  <span className="text-base font-bold uppercase">{profile?.nome?.[0] ?? 'U'}</span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{profile?.nome || 'Usuário'}</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{perfilExibicao}</p>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => navigate('/faturamento')}
-                className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group text-left w-full cursor-pointer"
+                onClick={handleLogout}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-slate-200 hover:bg-slate-800 transition"
               >
-                <div className="p-3 bg-emerald-50 rounded-lg w-fit mb-4 group-hover:bg-emerald-600 transition-colors">
-                  <DollarSign className="h-6 w-6 text-emerald-600 group-hover:text-white" />
-                </div>
-                <h3 className="font-bold text-gray-900">Faturamento</h3>
-                <p className="text-xs text-gray-500 mt-1">Fluxo de caixa e ordens concluídas</p>
+                <LogOut className="h-4 w-4" />
+                Sair do Sistema
               </button>
+            </div>
+          </aside>
 
-              <button
-                type="button"
-                onClick={() => setIsUsuariosOpen(true)}
-                className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group text-left w-full cursor-pointer"
-              >
-                <div className="p-3 bg-indigo-50 rounded-lg w-fit mb-4 group-hover:bg-indigo-600 transition-colors">
-                  <Users className="h-6 w-6 text-indigo-600 group-hover:text-white" />
+          <div className="xl:ml-[300px] flex-1">
+            <div className="py-8 px-4 sm:px-6 lg:px-8">
+<section className="xl:hidden bg-slate-950 text-slate-100 rounded-3xl border border-slate-800 p-5 shadow-2xl shadow-slate-950/30 mb-8">
+              <div className="mb-6 flex items-center gap-3 rounded-3xl bg-slate-900/80 px-4 py-4 border border-slate-800">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-slate-800 text-white">
+                  <img src={logo} alt="RealServiços" className="h-10 w-10 rounded-lg object-cover" />
                 </div>
-                <h3 className="font-bold text-gray-900">Usuários</h3>
-                <p className="text-xs text-gray-500 mt-1">Gestão de perfis e acessos do sistema</p>
-              </button>
-            </>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setIsRebobinamentosOpen(true)}
-            className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group text-left w-full outline-none"
-          >
-            <div className="p-3 bg-purple-50 rounded-lg w-fit mb-4 group-hover:bg-purple-600 transition-colors">
-              <RotateCw className="h-6 w-6 text-purple-600 group-hover:text-white" />
-            </div>
-            <h3 className="font-bold text-gray-900">Rebobinamentos</h3>
-            <p className="text-xs text-gray-500 mt-1">Cadastro e alteração de tipos de rebobinamento</p>
-          </button>
-        </div>
-
-        {/* Seção da Fila de Trabalho */}
-        <section className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-8 border-b pb-4 border-gray-100">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Wrench className="h-5 w-5 text-gray-600" />
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-200">Real Serviços</p>
+                  <p className="text-[11px] text-emerald-400 uppercase tracking-[0.15em]">Enterprise SaaS</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">Fila de Trabalho</h2>
-                <p className="text-xs text-gray-400">Ordens de serviço em andamento na oficina</p>
-              </div>
-            </div>
-            <div className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-xs font-bold shadow-sm">
-              {activeOSList.length} ATIVAS
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/clientes')}
+                  className="flex w-full items-center gap-3 rounded-3xl bg-slate-900 px-4 py-3 text-sm text-slate-200 transition hover:bg-slate-800"
+                >
+                  <Users className="h-4 w-4 text-slate-300" />
+                  Clientes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/motores')}
+                  className="flex w-full items-center gap-3 rounded-3xl bg-slate-900 px-4 py-3 text-sm text-slate-200 transition hover:bg-slate-800"
+                >
+                  <Settings className="h-4 w-4 text-slate-300" />
+                  Motores
+                </button>
+                {Number(profile?.id_perfil) === 1 && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/faturamento')}
+                    className="flex w-full items-center gap-3 rounded-3xl bg-slate-900 px-4 py-3 text-sm text-slate-200 transition hover:bg-slate-800"
+                  >
+                    <DollarSign className="h-4 w-4 text-slate-300" />
+                    Faturamento
+                  </button>
+                )}
+                {Number(profile?.id_perfil) === 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsUsuariosOpen(true)}
+                    className="flex w-full items-center gap-3 rounded-3xl bg-slate-900 px-4 py-3 text-sm text-slate-200 transition hover:bg-slate-800"
+                  >
+                    <Users className="h-4 w-4 text-slate-300" />
+                    Usuários
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsRebobinamentosOpen(true)}
+                  className="flex w-full items-center gap-3 rounded-3xl bg-slate-900 px-4 py-3 text-sm text-slate-200 transition hover:bg-slate-800"
+                >
+                  <RotateCw className="h-4 w-4 text-slate-300" />
+                    Rebobinamentos
+                  </button>
+                </div>
+              </section>
+
+              <section className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm mb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Página Inicial</h1>
+                    <p className="text-sm text-gray-500">Acompanhe a fila de serviço e acesse os módulos a partir do menu fixo.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-8 border-b pb-4 border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      <Wrench className="h-5 w-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-800">Fila de Trabalho</h2>
+                      <p className="text-xs text-gray-400">Ordens de serviço em andamento na oficina</p>
+                    </div>
+                  </div>
+                  <div className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-xs font-bold shadow-sm">
+                    {activeOSList.length} ATIVAS
+                  </div>
+                </div>
+
+                {isLoadingOS ? (
+                  <div className="flex flex-col items-center justify-center py-24">
+                    <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4 opacity-20" />
+                    <p className="text-sm text-gray-400 animate-pulse font-medium">Sincronizando dados...</p>
+                  </div>
+                ) : activeOSList.length === 0 ? (
+                  <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl py-24 flex flex-col items-center text-center px-4">
+                    <div className="bg-white p-4 rounded-full shadow-sm mb-4">
+                      <Wrench className="h-10 w-10 text-gray-200" />
+                    </div>
+                    <p className="text-lg font-bold text-gray-700">Oficina em dia!</p>
+                    <p className="text-sm text-gray-400 max-w-xs mt-2">
+                      Não há ordens de serviço pendentes ou em execução no momento.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {activeOSList.map((os) => (
+                      <DashboardCard
+                        key={os.id_os}
+                        os={os as any}
+                        onViewDetails={handleOpenOSDetails}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
             </div>
           </div>
-
-          {isLoadingOS ? (
-            <div className="flex flex-col items-center justify-center py-24">
-              <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4 opacity-20" />
-              <p className="text-sm text-gray-400 animate-pulse font-medium">Sincronizando dados...</p>
-            </div>
-          ) : activeOSList.length === 0 ? (
-            <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl py-24 flex flex-col items-center text-center px-4">
-              <div className="bg-white p-4 rounded-full shadow-sm mb-4">
-                <Wrench className="h-10 w-10 text-gray-200" />
-              </div>
-              <p className="text-lg font-bold text-gray-700">Oficina em dia!</p>
-              <p className="text-sm text-gray-400 max-w-xs mt-2">
-                Não há ordens de serviço pendentes ou em execução no momento.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeOSList.map((os) => (
-                <DashboardCard 
-                  key={os.id_os} 
-                  os={os as any} 
-                  onViewDetails={handleOpenOSDetails} 
-                />
-              ))}
-            </div>
-          )}
-        </section>
+        </div>
       </main>
 
       {/* Modal Rebobinamentos */}
