@@ -257,8 +257,13 @@ const OSServiceTracking: React.FC = () => {
                 {/* Header */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center space-x-4">
-                        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                            <ChevronLeft className="h-6 w-6 text-gray-500" />
+                        <button 
+                            onClick={() => navigate(-1)} 
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm shrink-0"
+                            title="Voltar"
+                        >
+                            <ChevronLeft className="h-4 w-4 text-slate-600" />
+                            <span>Voltar</span>
                         </button>
                         <div>
                             <h1 className="text-xl font-bold text-gray-800 flex items-center">

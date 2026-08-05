@@ -126,8 +126,13 @@ const OSLaudoEletricoPDF: React.FC = () => {
             <div className="no-print w-full lg:w-80 bg-white border-b lg:border-b-0 lg:border-r border-gray-200 p-6 flex flex-col justify-between shrink-0">
                 <div className="space-y-6">
                     <div className="flex items-center space-x-3">
-                        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200" title="Voltar">
-                            <ChevronLeft className="h-5 w-5 text-gray-500" />
+                        <button 
+                            onClick={() => navigate(-1)} 
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm shrink-0"
+                            title="Voltar"
+                        >
+                            <ChevronLeft className="h-4 w-4 text-slate-600" />
+                            <span>Voltar</span>
                         </button>
                         <div>
                             <h1 className="text-lg font-bold text-gray-800">Relatório Elétrico - OS #{id}</h1>
