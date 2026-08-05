@@ -44,9 +44,25 @@ const Motors: React.FC = () => {
 
         if (query && query.trim()) {
           const trimmed = query.trim();
-          queryBuilder = queryBuilder.or(
-            `num_serie.ilike.%${trimmed}%,fabricante.ilike.%${trimmed}%,modelo.ilike.%${trimmed}%,cliente.nome_razao_social.ilike.%${trimmed}%`
-          );
+
+          const { data: matchingClients } = await supabase
+            .from('cliente')
+            .select('id_cliente')
+            .ilike('nome_razao_social', `%${trimmed}%`);
+
+          const clientIds = matchingClients?.map((c) => c.id_cliente) || [];
+
+          const orConditions = [
+            `num_serie.ilike.%${trimmed}%`,
+            `fabricante.ilike.%${trimmed}%`,
+            `modelo.ilike.%${trimmed}%`
+          ];
+
+          if (clientIds.length > 0) {
+            orConditions.push(`id_cliente.in.(${clientIds.join(',')})`);
+          }
+
+          queryBuilder = queryBuilder.or(orConditions.join(','));
         }
 
         if (clienteIdFiltro) {
