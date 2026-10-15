@@ -22,7 +22,12 @@ const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({ idOS, column, folde
 
   const persist = async (next: string[]) => {
     const { error } = await supabase.from('ordens_servico').update({ [column]: next }).eq('id_os', idOS);
-    if (error) throw error;
+    if (error) {
+      if (error.message?.includes('column') || error.code === '42703' || error.message?.includes('schema cache')) {
+        throw new Error(`A coluna "${column}" ainda não existe na tabela ordens_servico. Execute o script SQL no Supabase.`);
+      }
+      throw error;
+    }
     setUrls(next);
   };
 

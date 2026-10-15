@@ -274,25 +274,41 @@ const Dashboard: React.FC = () => {
   // CARREGA OPÇÕES DOS SELECTS
   useEffect(() => {
     const loadModalOptions = async () => {
-      const [andamentosReq, causasReq] = await Promise.all([
-        supabase.from('andamento_servico').select('id_andamento, descricao_andamento').order('id_andamento'),
-        supabase.from('causas_queima').select('id_causa_queima, descricao_causa').order('descricao_causa'),
-      ]);
-      if (!andamentosReq.error) {
-        setAndamentosOptions(
-          (andamentosReq.data || []).map((a) => ({
-            id_andamento: a.id_andamento,
-            descricao: a.descricao_andamento,
-          }))
-        );
-      }
-      if (!causasReq.error) {
-        setCausasOptions(
-          (causasReq.data || []).map((c) => ({
-            id_causa_queima: c.id_causa_queima,
-            descricao: c.descricao_causa,
-          }))
-        );
+      try {
+        const [andamentosReq, causasReq] = await Promise.all([
+          supabase.from('andamento_servico').select('id_andamento, descricao_andamento').order('id_andamento'),
+          supabase.from('causa_queima').select('id_causa_queima, descricao_causa').order('descricao_causa'),
+        ]);
+
+        if (!andamentosReq.error) {
+          setAndamentosOptions(
+            (andamentosReq.data || []).map((a) => ({
+              id_andamento: a.id_andamento,
+              descricao: a.descricao_andamento,
+            }))
+          );
+        }
+
+        let causasData = causasReq.data;
+        if (causasReq.error) {
+          // Tenta no plural caso a tabela seja causas_queima
+          const fallback = await supabase
+            .from('causas_queima')
+            .select('id_causa_queima, descricao_causa')
+            .order('descricao_causa');
+          if (!fallback.error) causasData = fallback.data;
+        }
+
+        if (causasData) {
+          setCausasOptions(
+            causasData.map((c: any) => ({
+              id_causa_queima: c.id_causa_queima,
+              descricao: c.descricao_causa,
+            }))
+          );
+        }
+      } catch (err: any) {
+        console.warn('Aviso ao carregar listas auxiliares:', err.message);
       }
     };
     loadModalOptions();
@@ -303,17 +319,11 @@ const Dashboard: React.FC = () => {
       const { data, error } = await supabase
         .from('ordens_servico')
         .select(`
-          id_os,
-          data_entrada,
-          observacoes_gerais,
-          id_andamento,
-          id_causa_queima,
-          fotos_queima,
-          fotos_pecas_danificadas,
-          andamento_servico!ordens_servico_id_andamento_fkey(descricao_andamento),
+          *,
           motor:motores(
-            *,
-            cliente(*)
+            num_serie,
+            especificacao,
+            cliente(nome_razao_social)
           )
         `)
         .eq('id_os', id_os)
@@ -321,16 +331,22 @@ const Dashboard: React.FC = () => {
 
       if (error) throw error;
 
-      // O cliente é vinculado ao motor (mesma relação usada na fila)
+      // O cliente é vinculado ao motor (mesma relação da fila de OS)
       const motorData: any = Array.isArray((data as any).motor) ? (data as any).motor[0] : (data as any).motor;
-      setSelectedOS({ ...data, motor: motorData, cliente: motorData?.cliente ?? null });
+      setSelectedOS({
+        ...data,
+        motor: motorData,
+        cliente: motorData?.cliente ?? null,
+        fotos_queima: data.fotos_queima || [],
+        fotos_pecas_danificadas: data.fotos_pecas_danificadas || [],
+      });
       setEditAndamento(data.id_andamento ? String(data.id_andamento) : '');
       setEditCausaQueima(data.id_causa_queima ? String(data.id_causa_queima) : '');
       setEditObservacoes(data.observacoes_gerais ?? '');
       setIsViewModalOpen(true);
     } catch (err: any) {
-      console.error('Erro ao buscar detalhes da O.S:', err.message);
-      showToast('Não foi possível carregar os detalhes desta ordem.', 'error');
+      console.error('Erro ao buscar detalhes da O.S:', err);
+      showToast(`Não foi possível carregar os detalhes: ${err.message || 'Erro de conexão'}`, 'error');
     }
   };
 
