@@ -1,22 +1,33 @@
--- Colunas para armazenar as URLs das imagens enviadas no detalhe da O.S.
+-- 1. Garante as colunas na tabela ordens_servico
 ALTER TABLE public.ordens_servico
   ADD COLUMN IF NOT EXISTS fotos_queima text[] DEFAULT '{}',
   ADD COLUMN IF NOT EXISTS fotos_pecas_danificadas text[] DEFAULT '{}';
 
--- Garante o bucket (já usado em CreateOSForm) como público
+-- 2. Garante o bucket fotos_queima como público
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('fotos_queima', 'fotos_queima', true)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = true;
 
--- Políticas de acesso ao bucket para usuários autenticados
+-- 3. Remove políticas antigas que possam estar bloqueando o upload
 DROP POLICY IF EXISTS "fotos_queima_select" ON storage.objects;
-CREATE POLICY "fotos_queima_select" ON storage.objects
-  FOR SELECT USING (bucket_id = 'fotos_queima');
-
 DROP POLICY IF EXISTS "fotos_queima_insert" ON storage.objects;
-CREATE POLICY "fotos_queima_insert" ON storage.objects
-  FOR INSERT TO authenticated WITH CHECK (bucket_id = 'fotos_queima');
-
+DROP POLICY IF EXISTS "fotos_queima_update" ON storage.objects;
 DROP POLICY IF EXISTS "fotos_queima_delete" ON storage.objects;
+
+-- 4. Cria políticas públicas permissivas para o bucket fotos_queima (permite upload e visualização para todos)
+CREATE POLICY "fotos_queima_select" ON storage.objects
+  FOR SELECT TO public
+  USING (bucket_id = 'fotos_queima');
+
+CREATE POLICY "fotos_queima_insert" ON storage.objects
+  FOR INSERT TO public
+  WITH CHECK (bucket_id = 'fotos_queima');
+
+CREATE POLICY "fotos_queima_update" ON storage.objects
+  FOR UPDATE TO public
+  USING (bucket_id = 'fotos_queima')
+  WITH CHECK (bucket_id = 'fotos_queima');
+
 CREATE POLICY "fotos_queima_delete" ON storage.objects
-  FOR DELETE TO authenticated USING (bucket_id = 'fotos_queima');
+  FOR DELETE TO public
+  USING (bucket_id = 'fotos_queima');

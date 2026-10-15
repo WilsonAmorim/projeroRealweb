@@ -41,8 +41,17 @@ const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({ idOS, column, folde
         const file = files[i];
         const ext = file.name.split('.').pop();
         const path = `${folder}/os_${idOS}_${Date.now()}_${i}.${ext}`;
-        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file);
-        if (upErr) throw upErr;
+        const { error: upErr } = await supabase.storage
+          .from(BUCKET)
+          .upload(path, file, { upsert: true });
+
+        if (upErr) {
+          if (upErr.message?.includes('row-level security') || (upErr as any).statusCode === '403') {
+            throw new Error('Permissão negada no storage (RLS). Execute o script SQL no Supabase para liberar o bucket fotos_queima.');
+          }
+          throw upErr;
+        }
+
         const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
         if (data?.publicUrl) novas.push(data.publicUrl);
       }
