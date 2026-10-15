@@ -309,15 +309,9 @@ const Dashboard: React.FC = () => {
           id_andamento,
           id_causa_queima,
           andamento_servico!ordens_servico_id_andamento_fkey(descricao_andamento),
-          cliente:cliente(nome_razao_social, telefone, email),
           motor:motores(
-            num_serie, 
-            fabricante,
-            modelo,
-            potencia_cv_kw,
-            unidade_cv_kw,
-            rpm,
-            especificacao
+            *,
+            cliente(*)
           )
         `)
         .eq('id_os', id_os)
@@ -325,7 +319,9 @@ const Dashboard: React.FC = () => {
 
       if (error) throw error;
 
-      setSelectedOS(data);
+      // O cliente é vinculado ao motor (mesma relação usada na fila)
+      const motorData: any = Array.isArray((data as any).motor) ? (data as any).motor[0] : (data as any).motor;
+      setSelectedOS({ ...data, motor: motorData, cliente: motorData?.cliente ?? null });
       setEditAndamento(data.id_andamento ? String(data.id_andamento) : '');
       setEditCausaQueima(data.id_causa_queima ? String(data.id_causa_queima) : '');
       setEditObservacoes(data.observacoes_gerais ?? '');
