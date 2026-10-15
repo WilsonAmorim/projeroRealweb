@@ -1,5 +1,115 @@
-import React from 'react';
-import { X, Save, Loader2, Wrench } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { X, Save, Loader2, Wrench, ImagePlus, Trash2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+
+const BUCKET = 'fotos_queima';
+
+interface PhotoUploadFieldProps {
+  idOS: number;
+  column: 'fotos_queima' | 'fotos_pecas_danificadas';
+  folder: string;
+  label: string;
+  initial: string[];
+}
+
+const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({ idOS, column, folder, label, initial }) => {
+  const [urls, setUrls] = useState<string[]>(initial || []);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => setUrls(initial || []), [initial]);
+
+  const persist = async (next: string[]) => {
+    const { error } = await supabase.from('ordens_servico').update({ [column]: next }).eq('id_os', idOS);
+    if (error) throw error;
+    setUrls(next);
+  };
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setIsUploading(true);
+    setError(null);
+    try {
+      const novas: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const ext = file.name.split('.').pop();
+        const path = `${folder}/os_${idOS}_${Date.now()}_${i}.${ext}`;
+        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file);
+        if (upErr) throw upErr;
+        const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+        if (data?.publicUrl) novas.push(data.publicUrl);
+      }
+      await persist([...urls, ...novas]);
+    } catch (err: any) {
+      console.error(`Erro no upload (${column}):`, err);
+      setError(err?.message || 'Falha no upload.');
+    } finally {
+      setIsUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  const handleRemove = async (url: string) => {
+    if (!confirm('Remover esta imagem?')) return;
+    try {
+      const marker = `/${BUCKET}/`;
+      const idx = url.indexOf(marker);
+      if (idx >= 0) await supabase.storage.from(BUCKET).remove([url.substring(idx + marker.length)]);
+      await persist(urls.filter((u) => u !== url));
+    } catch (err: any) {
+      setError(err?.message || 'Falha ao remover.');
+    }
+  };
+
+  return (
+    <div className="mt-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={isUploading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
+        >
+          {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+          <span>{isUploading ? 'Enviando...' : 'Enviar imagens'}</span>
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+      </div>
+      {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
+      {urls.length === 0 ? (
+        <p className="text-xs text-slate-400 italic">Nenhuma imagem enviada.</p>
+      ) : (
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          {urls.map((url) => (
+            <div key={url} className="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
+              <a href={url} target="_blank" rel="noreferrer">
+                <img src={url} alt={label} className="w-full h-full object-cover" />
+              </a>
+              <button
+                type="button"
+                onClick={() => handleRemove(url)}
+                className="absolute top-1 right-1 p-1 bg-white/90 rounded-md text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Remover"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface EditOSModalProps {
   isOpen: boolean;
@@ -110,6 +220,23 @@ export const EditOSModal: React.FC<EditOSModalProps> = ({
                 </option>
               ))}
             </select>
+
+            <div className="mt-3 bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
+              <PhotoUploadField
+                idOS={selectedOS.id_os}
+                column="fotos_queima"
+                folder="queima"
+                label="Fotos da Queima"
+                initial={selectedOS.fotos_queima || []}
+              />
+              <PhotoUploadField
+                idOS={selectedOS.id_os}
+                column="fotos_pecas_danificadas"
+                folder="pecas_danificadas"
+                label="Peças Danificadas"
+                initial={selectedOS.fotos_pecas_danificadas || []}
+              />
+            </div>
           </div>
 
           {/* Observações */}

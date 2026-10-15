@@ -308,6 +308,8 @@ const Dashboard: React.FC = () => {
           observacoes_gerais,
           id_andamento,
           id_causa_queima,
+          fotos_queima,
+          fotos_pecas_danificadas,
           andamento_servico!ordens_servico_id_andamento_fkey(descricao_andamento),
           motor:motores(
             *,
